@@ -1,0 +1,139 @@
+# ==================================
+# VERSION CONTROL
+# ==================================
+.git
+.gitignore
+.github
+.gitattributes
+
+# ==================================
+# IDE FILES (never needed in Docker)
+# ==================================
+.idea
+.vscode
+.settings
+.project
+.classpath
+*.iml
+*.iws
+*.ipr
+
+# ==================================
+# BUILD ARTIFACTS (will be rebuilt in Docker)
+# ==================================
+target/
+build/
+out/
+bin/
+
+# ==================================
+# MAVEN WRAPPER (not needed if using Maven in Docker)
+# ==================================
+.mvn/
+mvnw
+mvnw.cmd
+
+# ==================================
+# DOCUMENTATION (not needed at runtime)
+# ==================================
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+*.md
+
+# ==================================
+# TESTS (not needed in production image)
+# ==================================
+src/test/
+**/test/
+**/*Test.java
+**/*IT.java
+test-results/
+coverage/
+
+# ==================================
+# CI/CD
+# ==================================
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+azure-pipelines.yml
+
+# ==================================
+# DOCKER FILES (don't copy Docker into Docker)
+# ==================================
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+*.dockerfile
+
+# ==================================
+# LOGS
+# ==================================
+*.log
+logs/
+log/
+
+# ==================================
+# OS FILES
+# ==================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==================================
+# TEMPORARY FILES
+# ==================================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ==================================
+# ENVIRONMENT FILES (use Docker env vars instead)
+# ==================================
+.env
+.env.*
+*.env
+
+# ==================================
+# SCRIPTS (usually not needed in container)
+# ==================================
+scripts/
+*.sh
+*.bat
+*.ps1
+
+# ==================================
+# MEDIA FILES (if large and not needed)
+# ==================================
+# Uncomment if you have large assets not needed in production
+# *.mp4
+# *.avi
+# *.mov
+# *.wmv
+
+# ==================================
+# MISC
+# ==================================
+node_modules/
+npm-debug.log*
+.cache
+.gradle
+```
+
+---
+
+## 🎯 **Why You Need Both**
+
+### **Example Scenario:**
+Your project has:
+├── target/                  # Maven build output (2GB)
+├── .idea/                   # IntelliJ files (500MB)
+├── src/test/                # Test files (100MB)
+├── logs/                    # Application logs (50MB)
+└── .env                     # Secret credentials

@@ -1,10 +1,14 @@
-HELP.md
+# ==================================
+# JAVA / MAVEN
+# ==================================
 target/
-.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+# ==================================
+# SPRING BOOT
+# ==================================
 .apt_generated
 .classpath
 .factorypath
@@ -13,21 +17,141 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
+# ==================================
+# IDE FILES
+# ==================================
+# IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
+out/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+# Eclipse
+.settings/
+bin/
 
-### VS Code ###
+# VS Code
 .vscode/
+*.code-workspace
+
+# NetBeans
+nbproject/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ==================================
+# OS FILES
+# ==================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+
+# ==================================
+# LOGS
+# ==================================
+*.log
+*.log.*
+logs/
+log/
+
+# ==================================
+# TEMPORARY FILES
+# ==================================
+*.tmp
+*.temp
+*.swp
+*.swo
+.~*
+
+# ==================================
+# SECRETS & ENVIRONMENT
+# ==================================
+# Never commit these!
+.env
+.env.local
+.env.*.local
+*.env
+application-secrets.yml
+application-local.yml
+secrets/
+credentials/
+
+# SSH keys
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+
+# ==================================
+# BUILD OUTPUTS
+# ==================================
+build/
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# ==================================
+# DOCKER (files, not images)
+# ==================================
+# Docker Compose override files (personal configs)
+docker-compose.override.yml
+docker-compose.local.yml
+
+# ==================================
+# TEST COVERAGE
+# ==================================
+coverage/
+*.coverage
+.nyc_output
+htmlcov/
+
+# ==================================
+# DATABASE
+# ==================================
+*.db
+*.sqlite
+*.sqlite3
+*.sql.backup
+
+# ==================================
+# MISC
+# ==================================
+.cache
+.gradle
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Generated files
+generated/
+generated-sources/
+generated-test-sources/
+
+# Backup files
+*.bak
+*.backup
+*.old

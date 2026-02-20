@@ -1,0 +1,32 @@
+FROM eclipse-temurin:21-jdk-alpine
+
+WORKDIR /app
+
+# Install Maven and useful dev tools
+RUN apk add --no-cache \
+    maven \
+    curl \
+    wget \
+    bash
+
+# Copy pom.xml first (better caching)
+COPY pom.xml .
+RUN mvn dependency:go-offline -B || true
+
+# Copy source code
+COPY src ./src
+
+# Expose application and debug ports
+EXPOSE 8080 5005
+
+# Environment variables for development
+ENV MAVEN_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=90s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
+# Run with hot reload and remote debugging
+CMD ["mvn", "spring-boot:run", \
+     "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005", \
+     "-Dspring-boot.run.profiles=dev"]
