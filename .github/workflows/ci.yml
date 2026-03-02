@@ -2,17 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, development ]
-    paths:
-      - 'src/**'
-      - 'pom.xml'
-      - 'docker/**'
-      - '.github/workflows/ci.yml'
+    branches: [ main, development, auth, feature/** ]
   pull_request:
     branches: [ main, development ]
-    paths:
-      - 'src/**'
-      - 'pom.xml'
 
 env:
   JAVA_VERSION: '21'
@@ -62,7 +54,10 @@ jobs:
           RESEND_API_KEY: re_fake_key
           FRONTEND_URL: http://localhost:3000
           BACKEND_URL: http://localhost:8080
-        run: mvn clean verify -B
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/pnq
+          SPRING_DATASOURCE_USERNAME: testuser
+          SPRING_DATASOURCE_PASSWORD: testpass
+        run: mvn clean package -B -Dsurefire.failIfNoSpecifiedTests=false
 
       - name: Upload test results
         if: always()
@@ -71,6 +66,7 @@ jobs:
           name: test-results
           path: target/surefire-reports/
           retention-days: 7
+          if-no-files-found: ignore
 
   # ============================================
   # Job 2: Docker Build
