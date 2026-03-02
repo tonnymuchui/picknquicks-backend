@@ -1,4 +1,5 @@
 package com.picknquicks.security;
 
-public class AuthenticationType {
+public enum AuthenticationType {
+    DATABASE, GOOGLE
 }
