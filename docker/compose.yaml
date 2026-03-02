@@ -1,21 +1,19 @@
-version: '3.8'
-
 services:
   backend:
     build:
-      context: ../..
+      context: ..
       dockerfile: docker/Dockerfile
     container_name: picknquicks
     ports:
       - "8080:8080"
+    env_file:
+      - ../.env
     environment:
-      - SPRING_PROFILES_ACTIVE=dev
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/pnq
-      - SPRING_DATASOURCE_USERNAME=tonnymuchui
-      - SPRING_DATASOURCE_PASSWORD=Muchui22$$
-      - SPRING_JPA_SHOW_SQL=true
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - LOGGING_LEVEL_COM_ECOMMERCE=DEBUG
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_FLYWAY_ENABLED: "true"
+      LOGGING_LEVEL_COM_PICKNQUICKS: DEBUG
     depends_on:
       postgres:
         condition: service_healthy
@@ -30,17 +28,15 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: ecommerce-postgres
-    environment:
-      POSTGRES_DB: pnq
-      POSTGRES_USER: tonnymuchui
-      POSTGRES_PASSWORD: Muchui22$$
+    container_name: picknquicks-postgres
+    env_file:
+      - ../.env
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5

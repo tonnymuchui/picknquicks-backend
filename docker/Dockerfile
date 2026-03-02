@@ -1,55 +1,32 @@
-# Stage 1: Build stage
+# Stage 1: Build
 FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
 
 WORKDIR /app
 
-# Copy pom.xml and download dependencies (cached layer)
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -B || true
 
-# Copy source code
 COPY src ./src
-
-# Build application (skip tests - already tested in CI)
 RUN mvn clean package -DskipTests -B
 
-# Stage 2: Runtime stage
+# Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine
 
-# Add metadata
-LABEL maintainer="tony@picknquicks.com"
-LABEL version="1.0"
-LABEL description="PickNQuicks E-commerce Backend"
-
-# Create app user (security best practice)
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
-# Copy JAR from build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Change ownership
 RUN chown -R appuser:appgroup /app
 
-# Switch to non-root user
 USER appuser
 
-# Expose port
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-# JVM optimization for containers
-ENV JAVA_OPTS="-XX:+UseContainerSupport \
-               -XX:MaxRAMPercentage=75.0 \
-               -XX:+UseG1GC \
-               -XX:+UnlockExperimentalVMOptions \
-               -XX:+UseStringDeduplication \
-               -Djava.security.egd=file:/dev/./urandom"
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -Djava.security.egd=file:/dev/./urandom"
 
-# Run application
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
-```

@@ -6,7 +6,6 @@ WORKDIR /app
 RUN apk add --no-cache \
     maven \
     curl \
-    wget \
     bash
 
 # Copy pom.xml first (better caching)
@@ -23,10 +22,9 @@ EXPOSE 8080 5005
 ENV MAVEN_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=90s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # Run with hot reload and remote debugging
 CMD ["mvn", "spring-boot:run", \
-     "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005", \
-     "-Dspring-boot.run.profiles=dev"]
+     "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]
