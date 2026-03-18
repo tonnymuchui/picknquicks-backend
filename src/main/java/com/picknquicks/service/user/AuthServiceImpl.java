@@ -1,4 +1,4 @@
-package com.picknquicks.service.user.impl;
+package com.picknquicks.service.user;
 
 import com.picknquicks.domain.user.*;
 import com.picknquicks.dto.request.*;
@@ -11,8 +11,9 @@ import com.picknquicks.repository.user.*;
 import com.picknquicks.security.AuthenticationType;
 import com.picknquicks.security.JwtTokenProvider;
 import com.picknquicks.security.UserPrincipal;
+import com.picknquicks.mapper.UserMapper;
 import com.picknquicks.service.notification.EmailService;
-import com.picknquicks.service.user.AuthService;
+import com.picknquicks.service.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,10 +25,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,11 +43,12 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailService emailService;
+    private final UserMapper userMapper;
+    private final FileStorageService fileStorageService;
 
     @Override
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        // Validate
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new BadRequestException("Passwords do not match");
         }
@@ -55,11 +57,9 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Email already registered");
         }
 
-        // Get customer role
         Role customerRole = roleRepository.findByName("CUSTOMER")
                 .orElseThrow(() -> new RuntimeException("Customer role not found"));
 
-        // Create user
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -67,14 +67,13 @@ public class AuthServiceImpl implements AuthService {
                 .lastName(request.getLastName())
                 .phone(request.getPhone())
                 .provider(AuthenticationType.DATABASE)
-                .enabled(false) // Requires email verification
+                .enabled(false)
                 .emailVerified(false)
                 .roles(Set.of(customerRole))
                 .build();
 
         user = userRepository.save(user);
 
-        // Create verification token
         String token = UUID.randomUUID().toString();
         VerificationToken verificationToken = VerificationToken.builder()
                 .token(token)
@@ -83,7 +82,6 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         verificationTokenRepository.save(verificationToken);
 
-        // Send verification email
         emailService.sendVerificationEmail(user, token);
 
         log.info("User registered successfully: {}", user.getEmail());
@@ -97,7 +95,6 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public AuthResponse login(LoginRequest request) {
         try {
-            // Authenticate
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
@@ -107,26 +104,22 @@ public class AuthServiceImpl implements AuthService {
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             User user = userPrincipal.getUser();
 
-            // Check if email is verified
             if (!user.getEmailVerified()) {
                 throw new BadRequestException("Please verify your email before logging in");
             }
 
-            // Check if account is locked
             if (user.getAccountLocked()) {
                 throw new BadRequestException("Your account has been locked due to too many failed login attempts");
             }
 
-            // Reset failed login attempts
             user.resetFailedLoginAttempts();
             user.updateLastLogin();
             userRepository.save(user);
 
-            // Generate tokens
             String accessToken = jwtTokenProvider.generateToken(authentication);
             String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
 
-            UserResponse userResponse = mapToUserResponse(user);
+            UserResponse userResponse = userMapper.toUserResponse(user);
 
             log.info("User logged in successfully: {}", user.getEmail());
 
@@ -139,7 +132,6 @@ public class AuthServiceImpl implements AuthService {
                     .build();
 
         } catch (BadCredentialsException e) {
-            // Handle failed login attempt
             User user = userRepository.findByEmail(request.getEmail()).orElse(null);
             if (user != null) {
                 user.incrementFailedLoginAttempts();
@@ -171,7 +163,6 @@ public class AuthServiceImpl implements AuthService {
         verificationToken.setVerified(true);
         verificationTokenRepository.save(verificationToken);
 
-        // Send welcome email
         emailService.sendWelcomeEmail(user);
 
         log.info("Email verified for user: {}", user.getEmail());
@@ -189,10 +180,8 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Email already verified");
         }
 
-        // Delete old tokens
         verificationTokenRepository.deleteByUser(user);
 
-        // Create new token
         String token = UUID.randomUUID().toString();
         VerificationToken verificationToken = VerificationToken.builder()
                 .token(token)
@@ -201,7 +190,6 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         verificationTokenRepository.save(verificationToken);
 
-        // Send email
         emailService.sendVerificationEmail(user, token);
 
         log.info("Verification email resent to: {}", email);
@@ -215,19 +203,16 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + request.getEmail()));
 
-        // Delete old reset tokens
         passwordResetTokenRepository.deleteByUser(user);
 
-        // Create new reset token
         String token = UUID.randomUUID().toString();
         PasswordResetToken resetToken = PasswordResetToken.builder()
                 .token(token)
                 .user(user)
-                .expiryDate(LocalDateTime.now().plusHours(1)) // 1 hour expiry
+                .expiryDate(LocalDateTime.now().plusHours(1))
                 .build();
         passwordResetTokenRepository.save(resetToken);
 
-        // Send reset email
         emailService.sendPasswordResetEmail(user, token);
 
         log.info("Password reset requested for: {}", user.getEmail());
@@ -251,7 +236,7 @@ public class AuthServiceImpl implements AuthService {
 
         User user = resetToken.getUser();
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        user.resetFailedLoginAttempts(); // Reset any locked account
+        user.resetFailedLoginAttempts();
         userRepository.save(user);
 
         resetToken.markAsUsed();
@@ -288,21 +273,82 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-    private UserResponse mapToUserResponse(User user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .fullName(user.getFullName())
-                .phone(user.getPhone())
-                .avatarUrl(user.getAvatarUrl())
-                .enabled(user.getEnabled())
-                .emailVerified(user.getEmailVerified())
-                .provider(user.getProvider())
-                .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()))
-                .createdAt(user.getCreatedAt())
-                .lastLogin(user.getLastLogin())
-                .build();
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponse getCurrentUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        return userMapper.toUserResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateProfile(String email, UpdateProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (request.getFirstName() != null && !request.getFirstName().isBlank()) {
+            user.setFirstName(request.getFirstName());
+        }
+
+        if (request.getLastName() != null && !request.getLastName().isBlank()) {
+            user.setLastName(request.getLastName());
+        }
+
+        if (request.getPhone() != null && !request.getPhone().isBlank()) {
+            user.setPhone(request.getPhone());
+        }
+
+        if (request.getAvatarFile() != null && !request.getAvatarFile().isEmpty()) {
+            String oldAvatarUrl = user.getAvatarUrl();
+            if (oldAvatarUrl != null && !oldAvatarUrl.isBlank()) {
+                try {
+                    log.info("Removing old avatar: {}", oldAvatarUrl);
+                    fileStorageService.deleteFile(oldAvatarUrl);
+                } catch (Exception e) {
+                    log.warn("Could not delete old avatar file: {}", oldAvatarUrl, e);
+                }
+            }
+
+            try {
+                String avatarFilePath = fileStorageService.storeFile(request.getAvatarFile(), "avatar");
+                user.setAvatarUrl(avatarFilePath);
+                log.info("Avatar updated for user: {}", email);
+            } catch (IOException e) {
+                log.error("Failed to upload avatar for user: {}", email, e);
+                throw new BadRequestException("Failed to upload avatar: " + e.getMessage());
+            }
+        }
+
+        user = userRepository.save(user);
+
+        return userMapper.toUserResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse changePassword(String email, ChangePasswordRequest request) {
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new BadRequestException("New passwords do not match");
+        }
+
+        if (request.getCurrentPassword().equals(request.getNewPassword())) {
+            throw new BadRequestException("New password must be different from current password");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        log.info("Password changed successfully for user: {}", email);
+
+        return ApiResponse.success("Password changed successfully");
     }
 }
