@@ -60,11 +60,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             User user = userRepository.findByEmail(email)
                     .orElseGet(() -> registerOAuth2User(email, name, picture, provider, providerId));
 
-            // Generate tokens
             UserPrincipal userPrincipal = new UserPrincipal(user);
             String accessToken = jwtTokenProvider.generateTokenFromEmail(
                     user.getEmail(),
-                    user.getRoles().stream().map(role -> "ROLE_" + role.getName()).toList(),
+                    user.getRoles().stream().map(role -> role.getName()).toList(),
                     jwtTokenProvider.getJwtExpiration() * 1000
             );
 
@@ -88,14 +87,14 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         User user = User.builder()
                 .email(email)
-                .password(passwordEncoder.encode(UUID.randomUUID().toString())) // Random password for OAuth users
+                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .firstName(firstName)
                 .lastName(lastName)
                 .provider(provider)
                 .providerId(providerId)
                 .avatarUrl(picture)
                 .enabled(true)
-                .emailVerified(true) // OAuth providers verify emails
+                .emailVerified(true)
                 .roles(Set.of(customerRole))
                 .build();
 
