@@ -32,7 +32,7 @@ public class EmailService {
 
     @Async
     public void sendVerificationEmail(User user, String token) {
-        String verificationUrl = frontendUrl + "/verify-email?token=" + token;
+        String verificationUrl = frontendUrl + "/auth/verify-email?token=" + token;
 
         Context context = new Context();
         context.setVariable("firstName", user.getFirstName());
@@ -44,7 +44,7 @@ public class EmailService {
 
     @Async
     public void sendPasswordResetEmail(User user, String token) {
-        String resetUrl = frontendUrl + "/reset-password?token=" + token;
+        String resetUrl = frontendUrl + "/auth/reset-password?token=" + token;
 
         Context context = new Context();
         context.setVariable("firstName", user.getFirstName());
@@ -62,6 +62,19 @@ public class EmailService {
 
         String htmlBody = templateEngine.process("email/welcome", context);
         sendEmail(user.getEmail(), "Welcome to PickNQuicks", htmlBody);
+    }
+
+    @Async
+    public void sendStaffWelcomeEmail(User user, String temporaryPassword) {
+        String loginUrl = frontendUrl + "/auth/login";
+
+        Context context = new Context();
+        context.setVariable("firstName", user.getFirstName());
+        context.setVariable("temporaryPassword", temporaryPassword);
+        context.setVariable("loginUrl", loginUrl);
+
+        String htmlBody = templateEngine.process("email/staff-welcome", context);
+        sendEmail(user.getEmail(), "Welcome to PickNQuicks Team", htmlBody);
     }
 
     private void sendEmail(String to, String subject, String htmlBody) {
