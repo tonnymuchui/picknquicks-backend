@@ -17,7 +17,7 @@ import java.util.Set;
 public class Role extends BaseEntity {
 
     @Column(nullable = false, unique = true, length = 50)
-    private String name; // ADMIN, CUSTOMER, STAFF, MANAGER
+    private String name;
 
     @Column(length = 255)
     private String description;
@@ -26,7 +26,6 @@ public class Role extends BaseEntity {
     @Builder.Default
     private Set<User> users = new HashSet<>();
 
-    // Predefined role names
     public static final String ADMIN = "ADMIN";
     public static final String CUSTOMER = "CUSTOMER";
     public static final String STAFF = "STAFF";
