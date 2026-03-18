@@ -29,14 +29,14 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Page<User> findByRoleName(@Param("roleName") String roleName, Pageable pageable);
 
     @Query("SELECT u FROM User u WHERE " +
-            "LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    Page<User> search(@Param("keyword") String keyword, Pageable pageable);
+            "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<User> search(@Param("search") String search, Pageable pageable);
 
-    @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.name = 'CUSTOMER'")
-    long countCustomers();
+    @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.name = :roleName")
+    Long countByRoleName(@Param("roleName") String roleName);
 
-    @Query("SELECT COUNT(u) FROM User u WHERE u.enabled = true AND u.emailVerified = true")
-    long countActiveUsers();
+    @Query("SELECT COUNT(u) FROM User u WHERE u.enabled = true")
+    Long countActiveUsers();
 }
