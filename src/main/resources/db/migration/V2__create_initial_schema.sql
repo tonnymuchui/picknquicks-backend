@@ -32,9 +32,9 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Create indexes for users table
-CREATE INDEX idx_user_email ON users(email);
-CREATE INDEX idx_user_provider ON users(provider, provider_id);
-CREATE INDEX idx_user_enabled ON users(enabled);
+CREATE INDEX IF NOT EXISTS idx_user_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_user_provider ON users(provider, provider_id);
+CREATE INDEX IF NOT EXISTS idx_user_enabled ON users(enabled);
 
 -- Create user_roles junction table
 CREATE TABLE IF NOT EXISTS user_roles (
@@ -46,8 +46,8 @@ CREATE TABLE IF NOT EXISTS user_roles (
 );
 
 -- Create indexes for user_roles table
-CREATE INDEX idx_user_roles_user_id ON user_roles(user_id);
-CREATE INDEX idx_user_roles_role_id ON user_roles(role_id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_role_id ON user_roles(role_id);
 
 -- Create addresses table
 CREATE TABLE IF NOT EXISTS addresses (
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS addresses (
 );
 
 -- Create indexes for addresses table
-CREATE INDEX idx_address_user ON addresses(user_id);
+CREATE INDEX IF NOT EXISTS idx_address_user ON addresses(user_id);
 
 -- Create verification_tokens table
 CREATE TABLE IF NOT EXISTS verification_tokens (
@@ -86,8 +86,8 @@ CREATE TABLE IF NOT EXISTS verification_tokens (
 );
 
 -- Create indexes for verification_tokens table
-CREATE INDEX idx_token ON verification_tokens(token);
-CREATE INDEX idx_verification_user_id ON verification_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_token ON verification_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_verification_user_id ON verification_tokens(user_id);
 
 -- Create password_reset_tokens table
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
@@ -104,8 +104,8 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 );
 
 -- Create indexes for password_reset_tokens table
-CREATE INDEX idx_reset_token ON password_reset_tokens(token);
-CREATE INDEX idx_reset_user_id ON password_reset_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_reset_token ON password_reset_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_reset_user_id ON password_reset_tokens(user_id);
 
 -- Insert default roles
 INSERT INTO roles (id, name, description, created_at, version)
