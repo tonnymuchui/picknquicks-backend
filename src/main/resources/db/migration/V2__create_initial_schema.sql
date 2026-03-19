@@ -1,4 +1,3 @@
--- Create roles table
 CREATE TABLE IF NOT EXISTS roles (
     id UUID PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
@@ -9,7 +8,6 @@ CREATE TABLE IF NOT EXISTS roles (
     CONSTRAINT roles_name_unique UNIQUE (name)
 );
 
--- Create users table
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY,
     email VARCHAR(128) NOT NULL UNIQUE,
@@ -31,12 +29,10 @@ CREATE TABLE IF NOT EXISTS users (
     CONSTRAINT users_email_unique UNIQUE (email)
 );
 
--- Create indexes for users table
 CREATE INDEX IF NOT EXISTS idx_user_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_user_provider ON users(provider, provider_id);
 CREATE INDEX IF NOT EXISTS idx_user_enabled ON users(enabled);
 
--- Create user_roles junction table
 CREATE TABLE IF NOT EXISTS user_roles (
     user_id UUID NOT NULL,
     role_id UUID NOT NULL,
@@ -45,11 +41,9 @@ CREATE TABLE IF NOT EXISTS user_roles (
     CONSTRAINT fk_user_roles_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
 
--- Create indexes for user_roles table
 CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_roles_role_id ON user_roles(role_id);
 
--- Create addresses table
 CREATE TABLE IF NOT EXISTS addresses (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL,
@@ -68,10 +62,8 @@ CREATE TABLE IF NOT EXISTS addresses (
     CONSTRAINT fk_addresses_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Create indexes for addresses table
 CREATE INDEX IF NOT EXISTS idx_address_user ON addresses(user_id);
 
--- Create verification_tokens table
 CREATE TABLE IF NOT EXISTS verification_tokens (
     id UUID PRIMARY KEY,
     token VARCHAR(255) NOT NULL UNIQUE,
@@ -85,11 +77,9 @@ CREATE TABLE IF NOT EXISTS verification_tokens (
     CONSTRAINT verification_tokens_token_unique UNIQUE (token)
 );
 
--- Create indexes for verification_tokens table
 CREATE INDEX IF NOT EXISTS idx_token ON verification_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_verification_user_id ON verification_tokens(user_id);
 
--- Create password_reset_tokens table
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     id UUID PRIMARY KEY,
     token VARCHAR(255) NOT NULL UNIQUE,
@@ -103,11 +93,9 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     CONSTRAINT password_reset_tokens_token_unique UNIQUE (token)
 );
 
--- Create indexes for password_reset_tokens table
 CREATE INDEX IF NOT EXISTS idx_reset_token ON password_reset_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_reset_user_id ON password_reset_tokens(user_id);
 
--- Insert default roles
 INSERT INTO roles (id, name, description, created_at, version)
 VALUES
     (gen_random_uuid(), 'ADMIN', 'Administrator role with full access', NOW(), 0),
