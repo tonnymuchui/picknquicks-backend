@@ -1,14 +1,8 @@
-# ==================================
-# JAVA / MAVEN
-# ==================================
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-# ==================================
-# SPRING BOOT
-# ==================================
 .apt_generated
 .classpath
 .factorypath
@@ -17,35 +11,24 @@ target/
 .springBeans
 .sts4-cache
 
-# ==================================
-# IDE FILES
-# ==================================
-# IntelliJ IDEA
 .idea/
 *.iws
 *.iml
 *.ipr
 out/
 
-# Eclipse
 .settings/
 bin/
 
-# VS Code
 .vscode/
 *.code-workspace
 
-# NetBeans
 nbproject/
 nbbuild/
 dist/
 nbdist/
 .nb-gradle/
 
-# ==================================
-# OS FILES
-# ==================================
-# macOS
 .DS_Store
 .AppleDouble
 .LSOverride
@@ -54,7 +37,6 @@ Icon
 .Spotlight-V100
 .Trashes
 
-# Windows
 Thumbs.db
 Thumbs.db:encryptable
 ehthumbs.db
@@ -62,31 +44,20 @@ ehthumbs_vista.db
 Desktop.ini
 $RECYCLE.BIN/
 
-# Linux
 *~
 .directory
 
-# ==================================
-# LOGS
-# ==================================
 *.log
 *.log.*
 logs/
 log/
 
-# ==================================
-# TEMPORARY FILES
-# ==================================
 *.tmp
 *.temp
 *.swp
 *.swo
 .~*
 
-# ==================================
-# SECRETS & ENVIRONMENT
-# ==================================
-# Never commit these!
 .env
 .env.local
 .env.*.local
@@ -96,15 +67,11 @@ application-local.yml
 secrets/
 credentials/
 
-# SSH keys
 *.pem
 *.key
 id_rsa
 id_rsa.pub
 
-# ==================================
-# BUILD OUTPUTS
-# ==================================
 build/
 *.jar
 *.war
@@ -113,32 +80,19 @@ build/
 *.tar.gz
 *.rar
 
-# ==================================
-# DOCKER (files, not images)
-# ==================================
-# Docker Compose override files (personal configs)
 docker-compose.override.yml
 docker-compose.local.yml
 
-# ==================================
-# TEST COVERAGE
-# ==================================
 coverage/
 *.coverage
 .nyc_output
 htmlcov/
 
-# ==================================
-# DATABASE
-# ==================================
 *.db
 *.sqlite
 *.sqlite3
 *.sql.backup
 
-# ==================================
-# MISC
-# ==================================
 .cache
 .gradle
 dependency-reduced-pom.xml
@@ -146,12 +100,13 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
-# Generated files
 generated/
 generated-sources/
 generated-test-sources/
 
-# Backup files
 *.bak
 *.backup
 *.old
+
+uploads/
+
