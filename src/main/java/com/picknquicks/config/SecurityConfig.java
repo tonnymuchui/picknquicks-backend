@@ -84,7 +84,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/auth/profile").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/orders/**", "/api/cart/**").hasAnyAuthority("CUSTOMER", "ADMIN")
+                        .requestMatchers("/api/cart/**").permitAll()
+                        .requestMatchers("/api/orders/**").hasAnyAuthority("CUSTOMER", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

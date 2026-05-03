@@ -141,7 +141,7 @@ public class ProductMapper {
         if (relativeImageUrl == null || relativeImageUrl.isBlank()) {
             return null;
         }
-        // Convert relative path like "products/uuid.jpg" to "/api/files/preview/products/uuid.jpg"
+        
         return "/api/files/preview/" + relativeImageUrl;
     }
 }

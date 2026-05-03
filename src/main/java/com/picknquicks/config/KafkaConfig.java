@@ -32,4 +32,27 @@ public class KafkaConfig {
                 .replicas(1)
                 .build();
     }
+    @Bean
+    public NewTopic cartItemAddedTopic() {
+        return TopicBuilder.name("cart-item-added")
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic cartAbandonedTopic() {
+        return TopicBuilder.name("cart-abandoned")
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic cartMergedTopic() {
+        return TopicBuilder.name("cart-merged")
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
 }

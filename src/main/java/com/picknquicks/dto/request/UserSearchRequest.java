@@ -3,6 +3,7 @@ package com.picknquicks.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -26,14 +27,18 @@ public class UserSearchRequest {
     private Boolean enabled;
 
     @Schema(description = "Page number", example = "0")
+    @Default
     private Integer page = 0;
 
     @Schema(description = "Page size", example = "20")
+    @Default
     private Integer size = 20;
 
     @Schema(description = "Sort field", example = "createdAt")
+    @Default
     private String sortBy = "createdAt";
 
     @Schema(description = "Sort direction", example = "DESC")
+    @Default
     private String sortDirection = "DESC";
 }

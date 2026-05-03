@@ -23,7 +23,7 @@ public class RedisConfig {
     private ObjectMapper createObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        // Use PROPERTY-based type inclusion instead of WRAPPER_ARRAY to be more compatible
+        
         objectMapper.activateDefaultTyping(
                 BasicPolymorphicTypeValidator.builder()
                         .allowIfBaseType(Object.class)
@@ -77,11 +77,18 @@ public class RedisConfig {
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer))
                 .disableCachingNullValues();
 
+        RedisCacheConfiguration cartConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(30))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer))
+                .disableCachingNullValues();
+
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(config)
                 .withCacheConfiguration("products", productsConfig)
                 .withCacheConfiguration("product", productConfig)
                 .withCacheConfiguration("featuredProducts", featuredProductsConfig)
+                .withCacheConfiguration("cart", cartConfig)
                 .build();
     }
 }
