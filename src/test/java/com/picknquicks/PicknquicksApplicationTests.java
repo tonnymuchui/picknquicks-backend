@@ -1,22 +1,12 @@
 package com.picknquicks;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-import org.testcontainers.DockerClientFactory;
+import org.springframework.test.context.ActiveProfiles;
 
-@Import(TestcontainersConfiguration.class)
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 class PicknquicksApplicationTests {
 
-	@BeforeAll
-	static void requireDockerForTestcontainers() {
-		Assumptions.assumeTrue(
-				DockerClientFactory.instance().isDockerAvailable(),
-				"Skipping context test: Docker is not available for Testcontainers"
-		);
-	}
 
 	@Test
 	void contextLoads() {
