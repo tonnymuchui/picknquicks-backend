@@ -1,4 +1,9 @@
 package com.picknquicks.domain.cart;
 
-public class CartStatus {
+public enum CartStatus {
+    ACTIVE,
+    ABANDONED,
+    CONVERTED,
+    EXPIRED,
+    MERGED
 }
