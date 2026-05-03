@@ -77,11 +77,18 @@ public class RedisConfig {
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer))
                 .disableCachingNullValues();
 
+        RedisCacheConfiguration cartConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(30))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer))
+                .disableCachingNullValues();
+
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(config)
                 .withCacheConfiguration("products", productsConfig)
                 .withCacheConfiguration("product", productConfig)
                 .withCacheConfiguration("featuredProducts", featuredProductsConfig)
+                .withCacheConfiguration("cart", cartConfig)
                 .build();
     }
 }
