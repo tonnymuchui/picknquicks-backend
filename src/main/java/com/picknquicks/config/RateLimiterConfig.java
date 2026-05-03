@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,7 +19,10 @@ public class RateLimiterConfig {
     }
 
     private Bucket createNewBucket() {
-        Bandwidth limit = Bandwidth.classic(100, Refill.intervally(100, Duration.ofMinutes(1)));
+        Bandwidth limit = Bandwidth.builder()
+                .capacity(100)
+                .refillIntervally(100, Duration.ofMinutes(1))
+                .build();
         return Bucket.builder()
                 .addLimit(limit)
                 .build();
