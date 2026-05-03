@@ -23,7 +23,7 @@ public class RedisConfig {
     private ObjectMapper createObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        // Use PROPERTY-based type inclusion instead of WRAPPER_ARRAY to be more compatible
+        
         objectMapper.activateDefaultTyping(
                 BasicPolymorphicTypeValidator.builder()
                         .allowIfBaseType(Object.class)

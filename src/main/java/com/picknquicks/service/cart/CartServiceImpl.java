@@ -101,7 +101,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     @CacheEvict(value = "cart", key = "#guestToken != null ? #guestToken : 'user:' + authentication.principal.id")
     public CartResponse updateCartItem(UUID cartItemId, UpdateCartItemRequest request, String guestToken) {
-        // ✅ FIX: use findCart() (returns Cart) not getCart() (returns CartResponse)
+        
         Cart cart = findCart(guestToken);
 
         if (cart == null) {
@@ -132,7 +132,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     @CacheEvict(value = "cart", key = "#guestToken != null ? #guestToken : 'user:' + authentication.principal.id")
     public CartResponse removeFromCart(UUID cartItemId, String guestToken) {
-        // ✅ FIX: use findCart() not getCart()
+        
         Cart cart = findCart(guestToken);
 
         if (cart == null) {
@@ -159,7 +159,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     @CacheEvict(value = "cart", key = "#guestToken != null ? #guestToken : 'user:' + authentication.principal.id")
     public CartResponse clearCart(String guestToken) {
-        // ✅ FIX: use findCart() not getCart()
+        
         Cart cart = findCart(guestToken);
 
         if (cart == null) {
