@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Order Delivered</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                   style="background-color: #ffffff; border-radius: 12px; overflow: hidden;">
+
+                <!-- Header -->
+                <tr>
+                    <td style="background-color: #064c4f; padding: 44px 40px; text-align: center;">
+                        <h1 style="margin: 0; color: #bbea70; font-size: 26px; font-weight: 700; font-family: 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+                            Order Delivered
+                        </h1>
+                        <p style="margin: 10px 0 0; color: #ffffff; font-size: 14px; font-weight: 400;">
+                            Your order has arrived safely
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- Body -->
+                <tr>
+                    <td style="padding: 40px;">
+                        <p style="margin: 0 0 14px; color: #064c4f; font-size: 17px; font-weight: 600;">
+                            Hi <span th:text="${firstName}">Customer</span>,
+                        </p>
+                        <p style="margin: 0 0 28px; color: #333333; font-size: 15px; line-height: 1.7;">
+                            Your order has been delivered successfully. We hope you enjoy your purchase!
+                        </p>
+
+                        <!-- Delivery Confirmation Card -->
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="padding: 18px 20px; background-color: #f5f5f5; border-radius: 8px; border-left: 4px solid #bbea70;">
+                                    <p style="margin: 0 0 12px; color: #064c4f; font-size: 14px; font-weight: 600;">
+                                        Delivery Details
+                                    </p>
+                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td style="padding: 6px 0;">
+                                                <p style="margin: 0; color: #666666; font-size: 13px;">Order ID</p>
+                                                <p style="margin: 4px 0 0; color: #064c4f; font-size: 15px; font-weight: 600;" th:text="${orderId}">ORD-123456</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0;">
+                                                <p style="margin: 0; color: #666666; font-size: 13px;">Delivered On</p>
+                                                <p style="margin: 4px 0 0; color: #064c4f; font-size: 15px; font-weight: 600;" th:text="${deliveryDate}">December 26, 2026</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0;">
+                                                <p style="margin: 0; color: #666666; font-size: 13px;">Delivery Time</p>
+                                                <p style="margin: 4px 0 0; color: #064c4f; font-size: 15px; font-weight: 600;" th:text="${deliveryTime}">2:30 PM</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; border-top: 1px solid #e0e0e0;">
+                                                <p style="margin: 8px 0 0; color: #666666; font-size: 13px;">Delivery Location</p>
+                                                <p style="margin: 4px 0 0; color: #064c4f; font-size: 14px; font-weight: 600;" th:text="${deliveryLocation}">Front Porch</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Review Notice -->
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 28px;">
+                            <tr>
+                                <td style="background-color: #f5f5f5; border-radius: 8px; padding: 14px 18px; border-left: 4px solid #ff7006;">
+                                    <p style="margin: 0; color: #333333; font-size: 13px; line-height: 1.6;">
+                                        We'd love to hear from you! Please take a moment to review your items and share your feedback.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Support Notice -->
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 12px;">
+                            <tr>
+                                <td style="background-color: #f5f5f5; border-radius: 8px; padding: 14px 18px; border-left: 4px solid #6c1144;">
+                                    <p style="margin: 0; color: #333333; font-size: 13px; line-height: 1.6;">
+                                        <strong>Issue with your order?</strong> If there are any problems, contact us immediately for assistance.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- CTA Button -->
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 32px;">
+                            <tr>
+                                <td align="center">
+                                    <a th:href="${reviewUrl}"
+                                       style="display: inline-block; padding: 14px 44px; background-color: #bbea70; color: #064c4f; font-size: 15px; font-weight: 700; text-decoration: none; border-radius: 8px; font-family: 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+                                        Leave Review
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td style="background-color: #064c4f; padding: 24px 40px;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td align="center">
+                                    <p style="margin: 0 0 6px; color: #ffffff; font-size: 12px; opacity: 0.7;">
+                                        Need help? Contact us at
+                                        <a href="mailto:support@picknquicks.com" style="color: #bbea70; text-decoration: none;">support@picknquicks.com</a>
+                                    </p>
+                                    <p style="margin: 0; color: #ffffff; font-size: 11px; opacity: 0.5;">
+                                        &copy; 2026 PickNQuicks. All rights reserved.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
+
+

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Order Shipped</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                   style="background-color: #ffffff; border-radius: 12px; overflow: hidden;">
+
+                <!-- Header -->
+                <tr>
+                    <td style="background-color: #064c4f; padding: 44px 40px; text-align: center;">
+                        <h1 style="margin: 0; color: #bbea70; font-size: 26px; font-weight: 700; font-family: 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+                            Order Shipped
+                        </h1>
+                        <p style="margin: 10px 0 0; color: #ffffff; font-size: 14px; font-weight: 400;">
+                            Your order is on its way to you
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- Body -->
+                <tr>
+                    <td style="padding: 40px;">
+                        <p style="margin: 0 0 14px; color: #064c4f; font-size: 17px; font-weight: 600;">
+                            Hi <span th:text="${firstName}">Customer</span>,
+                        </p>
+                        <p style="margin: 0 0 28px; color: #333333; font-size: 15px; line-height: 1.7;">
+                            Great news! Your order has been shipped and is on its way to you. Track your package to stay updated.
+                        </p>
+
+                        <!-- Tracking Details Card -->
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="padding: 18px 20px; background-color: #f5f5f5; border-radius: 8px; border-left: 4px solid #bbea70;">
+                                    <p style="margin: 0 0 12px; color: #064c4f; font-size: 14px; font-weight: 600;">
+                                        Tracking Information
+                                    </p>
+                                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td style="padding: 6px 0;">
+                                                <p style="margin: 0; color: #666666; font-size: 13px;">Order ID</p>
+                                                <p style="margin: 4px 0 0; color: #064c4f; font-size: 15px; font-weight: 600;" th:text="${orderId}">ORD-123456</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0;">
+                                                <p style="margin: 0; color: #666666; font-size: 13px;">Tracking Number</p>
+                                                <p style="margin: 4px 0 0; color: #064c4f; font-size: 15px; font-weight: 600;" th:text="${trackingNumber}">TRK-123456789</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0;">
+                                                <p style="margin: 0; color: #666666; font-size: 13px;">Carrier</p>
+                                                <p style="margin: 4px 0 0; color: #064c4f; font-size: 15px; font-weight: 600;" th:text="${carrier}">Express Delivery</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; border-top: 1px solid #e0e0e0;">
+                                                <p style="margin: 8px 0 0; color: #666666; font-size: 13px;">Estimated Delivery</p>
+                                                <p style="margin: 4px 0 0; color: #064c4f; font-size: 15px; font-weight: 600;" th:text="${estimatedDelivery}">December 27, 2026</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Delivery Address -->
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 28px;">
+                            <tr>
+                                <td style="padding: 18px 20px; background-color: #f5f5f5; border-radius: 8px; border-left: 4px solid #ff7006;">
+                                    <p style="margin: 0 0 12px; color: #064c4f; font-size: 14px; font-weight: 600;">
+                                        Delivery Address
+                                    </p>
+                                    <p style="margin: 0; color: #333333; font-size: 13px; line-height: 1.6;" th:text="${deliveryAddress}">
+                                        123 Main Street, Nairobi, Kenya 00100
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Info Notice -->
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 28px;">
+                            <tr>
+                                <td style="background-color: #f5f5f5; border-radius: 8px; padding: 14px 18px; border-left: 4px solid #6c1144;">
+                                    <p style="margin: 0; color: #333333; font-size: 13px; line-height: 1.6;">
+                                        Click the button below to track your shipment in real-time and receive delivery updates.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- CTA Button -->
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 32px;">
+                            <tr>
+                                <td align="center">
+                                    <a th:href="${trackingUrl}"
+                                       style="display: inline-block; padding: 14px 44px; background-color: #bbea70; color: #064c4f; font-size: 15px; font-weight: 700; text-decoration: none; border-radius: 8px; font-family: 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+                                        Track Package
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td style="background-color: #064c4f; padding: 24px 40px;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td align="center">
+                                    <p style="margin: 0 0 6px; color: #ffffff; font-size: 12px; opacity: 0.7;">
+                                        Need help? Contact us at
+                                        <a href="mailto:support@picknquicks.com" style="color: #bbea70; text-decoration: none;">support@picknquicks.com</a>
+                                    </p>
+                                    <p style="margin: 0; color: #ffffff; font-size: 11px; opacity: 0.5;">
+                                        &copy; 2026 PickNQuicks. All rights reserved.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
+
+
