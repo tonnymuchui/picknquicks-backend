@@ -55,4 +55,27 @@ public class KafkaConfig {
                 .replicas(1)
                 .build();
     }
+    @Bean
+    public NewTopic orderCreatedTopic() {
+        return TopicBuilder.name("order-created")
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic orderPaidTopic() {
+        return TopicBuilder.name("order-paid")
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic orderStatusChangedTopic() {
+        return TopicBuilder.name("order-status-changed")
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
 }
