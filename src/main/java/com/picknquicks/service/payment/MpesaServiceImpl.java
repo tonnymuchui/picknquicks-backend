@@ -1,6 +1,5 @@
 package com.picknquicks.service.payment;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.picknquicks.config.MpesaConfig;
 import com.picknquicks.domain.order.Order;
 import com.picknquicks.domain.order.Payment;
@@ -8,29 +7,31 @@ import com.picknquicks.domain.order.PaymentStatus;
 import com.picknquicks.dto.mpesa.MpesaCallbackRequest;
 import com.picknquicks.dto.mpesa.MpesaStkPushRequest;
 import com.picknquicks.dto.mpesa.MpesaStkPushResponse;
-import com.picknquicks.event.OrderPaidEvent;
 import com.picknquicks.exception.BadRequestException;
 import com.picknquicks.exception.ResourceNotFoundException;
 import com.picknquicks.repository.order.OrderRepository;
 import com.picknquicks.repository.order.PaymentRepository;
-import com.picknquicks.service.payment.MpesaService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Base64;
 import java.util.UUID;
 
+/**
+ * M-Pesa payment service implementation.
+ * Handles M-Pesa STK push initiation and callback routing.
+ * Delegates to specialized services for specific concerns (authentication, callback processing, etc.)
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -40,32 +41,32 @@ public class MpesaServiceImpl implements MpesaService {
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-    private final ApplicationEventPublisher eventPublisher;
+    private final MpesaAuthenticationService authenticationService;
+    private final PaymentStateService paymentStateService;
+    private final OrderStateService orderStateService;
+    private final MpesaCallbackProcessor callbackProcessor;
 
     @Override
     @Transactional
     @CircuitBreaker(name = "mpesaService", fallbackMethod = "initiateStkPushFallback")
     @Retry(name = "mpesaPayment")
     public MpesaStkPushResponse initiateStkPush(UUID orderId, String phoneNumber, BigDecimal amount) {
+        // Fetch order with details
         Order order = orderRepository.findByIdWithDetails(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        Payment payment = order.getPayment();
-        if (payment == null) {
-            throw new BadRequestException("Payment not initialized");
-        }
+        // Validate order and payment
+        Payment payment = validateOrderAndPayment(order);
 
-        if (payment.getStatus() == PaymentStatus.COMPLETED) {
-            throw new BadRequestException("Payment already completed");
-        }
+        // Format phone number for M-Pesa
+        String formattedPhone = authenticationService.formatPhoneNumber(phoneNumber);
 
-        String accessToken = getAccessToken();
-        String timestamp = generateTimestamp();
-        String password = generatePassword(timestamp);
+        // Obtain access token
+        String accessToken = authenticationService.obtainAccessToken();
+        String timestamp = authenticationService.generateTimestamp();
+        String password = authenticationService.generatePassword(timestamp);
 
-        String formattedPhone = formatPhoneNumber(phoneNumber);
-
+        // Build STK push request
         MpesaStkPushRequest request = MpesaStkPushRequest.builder()
                 .businessShortCode(mpesaConfig.getShortCode())
                 .password(password)
@@ -80,77 +81,86 @@ public class MpesaServiceImpl implements MpesaService {
                 .transactionDesc("Payment for Order " + order.getOrderNumber())
                 .build();
 
+        // Send to M-Pesa API
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(accessToken);
-
         HttpEntity<MpesaStkPushRequest> entity = new HttpEntity<>(request, headers);
 
-        ResponseEntity<MpesaStkPushResponse> response = restTemplate.exchange(
-                mpesaConfig.getStkPushUrl(),
-                HttpMethod.POST,
-                entity,
-                MpesaStkPushResponse.class
-        );
+        try {
+            ResponseEntity<MpesaStkPushResponse> response = restTemplate.exchange(
+                    mpesaConfig.getStkPushUrl(),
+                    HttpMethod.POST,
+                    entity,
+                    MpesaStkPushResponse.class
+            );
 
-        MpesaStkPushResponse stkResponse = response.getBody();
+            MpesaStkPushResponse stkResponse = response.getBody();
+            log.debug("M-Pesa STK Push Response Code: {}, Description: {}",
+                    stkResponse != null ? stkResponse.getResponseCode() : "null",
+                    stkResponse != null ? stkResponse.getResponseDescription() : "null");
 
-        if (stkResponse != null && "0".equals(stkResponse.getResponseCode())) {
-            payment.setStatus(PaymentStatus.PROCESSING);
-            payment.setMpesaCheckoutRequestId(stkResponse.getCheckoutRequestID());
-            payment.setMpesaMerchantRequestId(stkResponse.getMerchantRequestID());
-            paymentRepository.save(payment);
+            // Handle response
+            if (stkResponse != null && "0".equals(stkResponse.getResponseCode())) {
+                // Transition payment and order to PROCESSING state
+                paymentStateService.transitionToProcessing(
+                    payment,
+                    stkResponse.getCheckoutRequestID(),
+                    stkResponse.getMerchantRequestID()
+                );
+                paymentRepository.save(payment);
 
-            log.info("STK Push initiated for order {}: {}", order.getOrderNumber(), stkResponse.getCheckoutRequestID());
-        } else {
-            payment.markAsFailed("STK Push failed: " + (stkResponse != null ? stkResponse.getResponseDescription() : "Unknown error"));
-            paymentRepository.save(payment);
+                // Update order to PAYMENT_PENDING
+                orderStateService.handlePaymentInitiated(order);
+                orderRepository.save(order);
 
-            log.error("STK Push failed for order {}: {}", order.getOrderNumber(),
-                    stkResponse != null ? stkResponse.getResponseDescription() : "Unknown error");
+                log.info("✅ STK Push initiated successfully for order {}: Checkout ID: {}",
+                        order.getOrderNumber(), stkResponse.getCheckoutRequestID());
+            } else {
+                // Mark payment as FAILED
+                paymentStateService.transitionToFailed(
+                    payment,
+                    "STK Push failed: " + (stkResponse != null ? stkResponse.getResponseDescription() : "Unknown error")
+                );
+                paymentRepository.save(payment);
+
+                log.error("❌ STK Push failed for order {}: {}", order.getOrderNumber(),
+                        stkResponse != null ? stkResponse.getResponseDescription() : "Unknown error");
+            }
+
+            return stkResponse;
+        } catch (Exception e) {
+            log.error("❌ Exception during STK Push for order {}: {}", order.getOrderNumber(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Validate order and payment are in correct state for STK push
+     */
+    private Payment validateOrderAndPayment(Order order) {
+        Payment payment = order.getPayment();
+
+        if (payment == null) {
+            throw new BadRequestException("Payment not initialized for order: " + order.getOrderNumber());
         }
 
-        return stkResponse;
+        if (payment.getStatus() == PaymentStatus.COMPLETED) {
+            throw new BadRequestException("Payment already completed for order: " + order.getOrderNumber());
+        }
+
+        if (payment.getStatus() == PaymentStatus.PROCESSING) {
+            throw new BadRequestException("Payment already in process for order: " + order.getOrderNumber());
+        }
+
+        return payment;
     }
 
     @Override
     @Transactional
     public void handleCallback(MpesaCallbackRequest callback) {
-        try {
-            var stkCallback = callback.getBody().getStkCallback();
-            String checkoutRequestId = stkCallback.getCheckoutRequestID();
-
-            Payment payment = paymentRepository.findByMpesaCheckoutRequestId(checkoutRequestId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Payment not found for checkout request: " + checkoutRequestId));
-
-            Order order = payment.getOrder();
-
-            payment.setCallbackData(objectMapper.writeValueAsString(callback));
-
-            if (stkCallback.getResultCode() == 0) {
-                var metadata = stkCallback.getCallbackMetadata();
-                String mpesaReceiptNumber = extractMetadataValue(metadata, "MpesaReceiptNumber");
-                String transactionId = extractMetadataValue(metadata, "TransactionId");
-
-                payment.markAsCompleted(transactionId, mpesaReceiptNumber);
-                paymentRepository.save(payment);
-
-                eventPublisher.publishEvent(new OrderPaidEvent(
-                        this, order.getId(), transactionId, payment.getAmount()
-                ));
-
-                log.info("Payment completed for order {}: Receipt {}", order.getOrderNumber(), mpesaReceiptNumber);
-            } else {
-                String failureReason = stkCallback.getResultDesc();
-                payment.markAsFailed(failureReason);
-                paymentRepository.save(payment);
-
-                log.error("Payment failed for order {}: {}", order.getOrderNumber(), failureReason);
-            }
-        } catch (Exception e) {
-            log.error("Error processing M-Pesa callback", e);
-            throw new RuntimeException("Failed to process callback", e);
-        }
+        // Delegate callback processing to specialized processor
+        callbackProcessor.processCallback(callback);
     }
 
     @Override
@@ -158,82 +168,29 @@ public class MpesaServiceImpl implements MpesaService {
         return "Transaction query not implemented yet";
     }
 
-    private String getAccessToken() {
-        String auth = mpesaConfig.getConsumerKey() + ":" + mpesaConfig.getConsumerSecret();
-        String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+    /**
+     * Fallback method for circuit breaker when M-Pesa service is unavailable
+     */
+    private MpesaStkPushResponse initiateStkPushFallback(
+            UUID orderId,
+            String phoneNumber,
+            BigDecimal amount,
+            Exception ex) {
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(encodedAuth);
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<AccessTokenResponse> response = restTemplate.exchange(
-                mpesaConfig.getAuthUrl(),
-                HttpMethod.GET,
-                entity,
-                AccessTokenResponse.class
-        );
-
-        if (response.getBody() != null) {
-            return response.getBody().getAccessToken();
-        }
-
-        throw new RuntimeException("Failed to get M-Pesa access token");
-    }
-
-    private String generateTimestamp() {
-        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-    }
-
-    private String generatePassword(String timestamp) {
-        String str = mpesaConfig.getShortCode() + mpesaConfig.getPassKey() + timestamp;
-        return Base64.getEncoder().encodeToString(str.getBytes(StandardCharsets.UTF_8));
-    }
-
-    private String formatPhoneNumber(String phone) {
-        if (phone.startsWith("+254")) {
-            return phone.substring(1);
-        } else if (phone.startsWith("0")) {
-            return "254" + phone.substring(1);
-        } else if (phone.startsWith("254")) {
-            return phone;
-        }
-        return "254" + phone;
-    }
-
-    private String extractMetadataValue(MpesaCallbackRequest.CallbackMetadata metadata, String name) {
-        if (metadata == null || metadata.getItem() == null) {
-            return null;
-        }
-
-        return metadata.getItem().stream()
-                .filter(item -> name.equals(item.getName()))
-                .map(item -> String.valueOf(item.getValue()))
-                .findFirst()
-                .orElse(null);
-    }
-
-    private MpesaStkPushResponse initiateStkPushFallback(UUID orderId, String phoneNumber, BigDecimal amount, Exception ex) {
-        log.error("Circuit breaker fallback for M-Pesa STK Push", ex);
+        log.error("🔴 CIRCUIT BREAKER FALLBACK: M-Pesa STK Push failed for order ID: {}", orderId, ex);
 
         Payment payment = paymentRepository.findByOrderId(orderId).orElse(null);
         if (payment != null) {
-            payment.markAsFailed("M-Pesa service unavailable. Please try again later.");
+            paymentStateService.transitionToFailed(
+                payment,
+                "M-Pesa service unavailable: " + ex.getMessage()
+            );
             paymentRepository.save(payment);
+            log.error("Payment marked as FAILED for order: {}", payment.getOrder().getOrderNumber());
         }
 
-        throw new BadRequestException("Payment service temporarily unavailable. Please try again later.");
-    }
-
-    private static class AccessTokenResponse {
-        private String access_token;
-
-        public String getAccessToken() {
-            return access_token;
-        }
-
-        public void setAccess_token(String access_token) {
-            this.access_token = access_token;
-        }
+        throw new BadRequestException(
+            "⚠️ Payment service temporarily unavailable. Please try again later. Error: " + ex.getMessage()
+        );
     }
 }
